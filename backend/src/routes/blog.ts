@@ -20,39 +20,44 @@ blogRouter.use("/*", async (c, next) => {
     const authHeader = c.req.header("Authorization");
     const token = authHeader?.split(" ")[1];
       const verificationResponse = await verify(token as string, c.env.JWT_SECRET)
-      console.log(verificationResponse);
-      
     c.set("userId",verificationResponse.id)
     await next()
   }
   catch (err) {
+    c.status(403);
     return c.text("Error Authenticating You!")
   }
 })
 
 
 
-blogRouter.post('/', async (c) => {
-	const userId = c.get('userId');
-	const prisma = new PrismaClient({
-		datasourceUrl: c.env.DATABASE_URL,
-	}).$extends(withAccelerate());
+blogRouter.post('/add', async (c) => {
+    try {
+        const userId = c.get('userId');
+        const prisma = new PrismaClient({
+            datasourceUrl: c.env.DATABASE_URL,
+        }).$extends(withAccelerate());
 
-    const body = await c.req.json();
-    const { success, error } = createPostInput.safeParse(body)
-    if (!success) {
-      return c.text(error.issues[0].message)
+        const body = await c.req.json();
+        const { success, error } = createPostInput.safeParse(body)
+        if (!success) {
+            return c.text(error.issues[0].message)
+        }
+        const blog = await prisma.post.create({
+            data: {
+                title: body.title,
+                content: body.content,
+                authorId: userId
+            }
+        });
+        return c.json({
+            id: blog.id
+        });
     }
-	const post = await prisma.post.create({
-		data: {
-			title: body.title,
-			content: body.content,
-			authorId: userId
-		}
-	});
-	return c.json({
-		id: post.id
-	});
+    catch (err) {
+        c.status(403);
+        return c.json({"error:":err})
+    }
 })
 
 blogRouter.put('/update', async (c) => {
@@ -70,7 +75,6 @@ blogRouter.put('/update', async (c) => {
         const res = await prisma.post.update({
             where: {
                 id: body.id,
-                authorId: userId
             },
             data: {
                 title: body.title,
@@ -78,7 +82,7 @@ blogRouter.put('/update', async (c) => {
             }
         });
 
-        return c.json({message:res})
+        return c.json({message:res.id})
     }
     catch (err) {
         return c.json({error:err})
@@ -95,12 +99,50 @@ blogRouter.get('/:id', async (c) => {
         const post = await prisma.post.findUnique({
             where: {
                 id
+            },
+            select: {
+            content: true,
+            title: true,
+            id: true,
+            author: {
+                select: {
+                    name: true
+                }
             }
+        }
         });
 
         return c.json(post);
     }
     catch (err) {
+        c.status(411);
+        return c.json({"error faced:": err})
+    }
+})
+
+blogRouter.get('/bulk', async (c) => {
+    try {
+        const prisma = new PrismaClient({
+            datasourceUrl: c.env.DATABASE_URL,
+        }).$extends(withAccelerate());
+	
+        const post = await prisma.post.findMany({
+        select: {
+            content: true,
+            title: true,
+            id: true,
+            author: {
+                select: {
+                    name: true
+                }
+            }
+        }
+        });
+        console.log(post)
+    return c.json(post);
+    }
+    catch (err) {
+         c.status(411);
         return c.json({"error faced:": err})
     }
 })
