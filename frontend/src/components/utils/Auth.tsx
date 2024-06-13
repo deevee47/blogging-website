@@ -4,6 +4,7 @@ import { SignupType } from "@deevee/medium-clone-common";
 import axios from "axios";
 import { BACKEND_URL } from "../../config";
 
+
 export const Auth = ({ type }: { type: "signup" | "signin" }) => {
     const navigate = useNavigate();
     const [postInputs, setPostInputs] = useState<SignupType>({
@@ -13,6 +14,7 @@ export const Auth = ({ type }: { type: "signup" | "signin" }) => {
     });
 
     async function sendRequest() {
+
         try {
             const response = await axios.post(`${BACKEND_URL}/api/v1/user/${type === "signup" ? "signup" : "signin"}`, postInputs,);
             const jwt = response.data;

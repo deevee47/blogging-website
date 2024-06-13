@@ -108,7 +108,7 @@ blogRouter.get('/bulk', async (c) => {
             }
         }
         });
-        console.log(post)
+        // console.log(post)
     return c.json(post);
     }
     catch (err) {
