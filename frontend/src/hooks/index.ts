@@ -36,7 +36,7 @@ export const useBlog = ({ id }: { id: string }) => {
 }
 export const useBlogs = () => {
     const [loading, setLoading] = useState(true);
-    const [blog, setBlogs] = useState<Blog[]>();
+    const [blogs, setBlogs] = useState<Blog[]>();
 
     useEffect(() => {
         axios.get(`${BACKEND_URL}/api/v1/blog/bulk`, {
@@ -45,15 +45,14 @@ export const useBlogs = () => {
             }
         })
             .then(response => {
-                console.log(response)
-                setBlogs(response.data);
+                 setBlogs(response.data);
                 setLoading(false);
             })
     }, [])
 
     return {
         loading,
-        blog
+        blogs
     }
 
 }

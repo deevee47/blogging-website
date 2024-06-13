@@ -89,6 +89,35 @@ blogRouter.put('/update', async (c) => {
     }
 });
 
+
+blogRouter.get('/bulk', async (c) => {
+    try {
+        const prisma = new PrismaClient({
+            datasourceUrl: c.env.DATABASE_URL,
+        }).$extends(withAccelerate());
+	
+        const post = await prisma.post.findMany({
+        select: {
+            content: true,
+            title: true,
+            id: true,
+            author: {
+                select: {
+                    name: true
+                }
+            }
+        }
+        });
+        console.log(post)
+    return c.json(post);
+    }
+    catch (err) {
+         c.status(411);
+        return c.json({"error faced:": err})
+    }
+})
+
+
 blogRouter.get('/:id', async (c) => {
     try {
         const id = c.req.param('id');
@@ -116,33 +145,6 @@ blogRouter.get('/:id', async (c) => {
     }
     catch (err) {
         c.status(411);
-        return c.json({"error faced:": err})
-    }
-})
-
-blogRouter.get('/bulk', async (c) => {
-    try {
-        const prisma = new PrismaClient({
-            datasourceUrl: c.env.DATABASE_URL,
-        }).$extends(withAccelerate());
-	
-        const post = await prisma.post.findMany({
-        select: {
-            content: true,
-            title: true,
-            id: true,
-            author: {
-                select: {
-                    name: true
-                }
-            }
-        }
-        });
-        console.log(post)
-    return c.json(post);
-    }
-    catch (err) {
-         c.status(411);
         return c.json({"error faced:": err})
     }
 })
